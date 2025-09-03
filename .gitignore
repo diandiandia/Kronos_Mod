@@ -1,0 +1,4 @@
+pretrained/*
+__pycache__/*
+*.pyc
+
