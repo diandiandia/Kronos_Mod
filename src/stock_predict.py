@@ -8,7 +8,7 @@ from models.kronos import Kronos, KronosTokenizer, KronosPredictor
 
 def plot_prediction(kline_df, pred_df):
     # 设置中文字体
-    plt.rcParams["font.family"] = ["SimHei", "WenQuanYi Micro Hei", "Heiti TC"]
+    # plt.rcParams["font.family"] = ["SimHei", "WenQuanYi Micro Hei", "Heiti TC"]
     plt.rcParams['axes.unicode_minus'] = False  # 解决负号显示问题
 
     # 提取历史和预测数据
@@ -42,11 +42,25 @@ def plot_prediction(kline_df, pred_df):
 
 
 # 1. Load Model and Tokenizer
-tokenizer = KronosTokenizer.from_pretrained("NeoQuasar/Kronos-Tokenizer-base")
-model = Kronos.from_pretrained("NeoQuasar/Kronos-base")
+online = False
+if online:
+    tokenizer = KronosTokenizer.from_pretrained("NeoQuasar/Kronos-Tokenizer-base")
+    model = Kronos.from_pretrained("NeoQuasar/Kronos-base")
+else:
+    tokenizer = KronosTokenizer.from_pretrained("pretrained/Kronos-Tokenizer-base")
+    model = Kronos.from_pretrained("pretrained/Kronos-base")
+
+if torch.cuda.is_available():
+    device_name = "cuda:0"
+elif torch.mps.is_available():
+    device_name = "mps"
+elif torch.xpu.is_available():
+    device_name = "xpu:0"
+else:
+    device_name = "cpu"
 
 # 2. Instantiate Predictor
-predictor = KronosPredictor(model, tokenizer, device="cuda:0" if torch.cuda.is_available() else "cpu", max_context=512)
+predictor = KronosPredictor(model, tokenizer, device=device_name, max_context=512)
 
 # 3. Prepare Data
 df = pd.read_csv("stock_data/sh.600000_5.csv")
