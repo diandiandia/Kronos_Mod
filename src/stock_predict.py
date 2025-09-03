@@ -1,109 +1,83 @@
 import pandas as pd
 import matplotlib.pyplot as plt
-import torch
-from model.kronos import Kronos, KronosTokenizer, KronosPredictor
+import sys
 
-online = True
+import torch
+from models.kronos import Kronos, KronosTokenizer, KronosPredictor
+
 
 def plot_prediction(kline_df, pred_df):
-    pred_df.index = kline_df.index[-pred_df.shape[0]:]
-    sr_close = kline_df['close']
-    sr_pred_close = pred_df['close']
-    sr_close.name = 'Ground Truth'
-    sr_pred_close.name = "Prediction"
+    # 设置中文字体
+    plt.rcParams["font.family"] = ["SimHei", "WenQuanYi Micro Hei", "Heiti TC"]
+    plt.rcParams['axes.unicode_minus'] = False  # 解决负号显示问题
 
-    sr_volume = kline_df['volume']
-    sr_pred_volume = pred_df['volume']
-    sr_volume.name = 'Ground Truth'
-    sr_pred_volume.name = "Prediction"
+    # 提取历史和预测数据
+    historical_time = kline_df['timestamps']
+    historical_close = kline_df['close']
+    pred_time = pred_df['timestamps']
+    pred_close = pred_df['close']
 
-    close_df = pd.concat([sr_close, sr_pred_close], axis=1)
-    volume_df = pd.concat([sr_volume, sr_pred_volume], axis=1)
+    # 创建图形
+    plt.figure(figsize=(12, 6))
 
-    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(8, 6), sharex=True)
-
-    ax1.plot(close_df['Ground Truth'], label='Ground Truth', color='blue', linewidth=1.5)
-    ax1.plot(close_df['Prediction'], label='Prediction', color='red', linewidth=1.5)
-    ax1.set_ylabel('Close Price', fontsize=14)
-    ax1.legend(loc='lower left', fontsize=12)
-    ax1.grid(True)
-
-    ax2.plot(volume_df['Ground Truth'], label='Ground Truth', color='blue', linewidth=1.5)
-    ax2.plot(volume_df['Prediction'], label='Prediction', color='red', linewidth=1.5)
-    ax2.set_ylabel('Volume', fontsize=14)
-    ax2.legend(loc='upper left', fontsize=12)
-    ax2.grid(True)
-
+    # 绘制历史走势
+    plt.plot(historical_time, historical_close, label='历史收盘价', color='blue', linewidth=1.5)
+    
+    # 绘制预测走势
+    plt.plot(pred_time, pred_close, label='预测收盘价', color='red', linestyle='--', linewidth=1.5)
+    
+    # 添加标题和标签
+    plt.title('股票价格走势预测', fontsize=16)
+    plt.xlabel('时间', fontsize=14)
+    plt.ylabel('收盘价', fontsize=14)
+    
+    # 美化图表
+    plt.xticks(rotation=45)
+    plt.grid(alpha=0.3)
+    plt.legend(fontsize=12)
     plt.tight_layout()
+    
+    # 显示图表
     plt.show()
 
 
 # 1. Load Model and Tokenizer
-print(f"Online is {online}")
-if online:
-    tokenizer = KronosTokenizer.from_pretrained("NeoQuasar/Kronos-Tokenizer-base")
-    model = Kronos.from_pretrained("NeoQuasar/Kronos-small")
-else:
-    tokenizer = KronosTokenizer.from_pretrained("../pretrained/kronos-Tokenizer-base")
-    model = Kronos.from_pretrained("../pretrained/Kronos-base")
+tokenizer = KronosTokenizer.from_pretrained("NeoQuasar/Kronos-Tokenizer-base")
+model = Kronos.from_pretrained("NeoQuasar/Kronos-base")
 
 # 2. Instantiate Predictor
-if torch.cuda.is_available():
-    device_name = "cuda:0"
-elif torch.mps.is_available():
-    device_name = "mps"
-elif torch.xpu.is_available():
-    device_name = "xpu:0"
-else:
-    device_name = "cpu"
-
-print("Using device:", device_name)
-
-
-predictor = KronosPredictor(model, tokenizer, device=device_name, max_context=64)
+predictor = KronosPredictor(model, tokenizer, device="cuda:0" if torch.cuda.is_available() else "cpu", max_context=512)
 
 # 3. Prepare Data
-# df = pd.read_csv("./data/XSHG_5min_600977.csv")
-df = pd.read_csv("D:/Projects/Kronos/stock_data/sh.600000_5.csv")
+df = pd.read_csv("stock_data/sh.600000_5.csv")
 df['timestamps'] = pd.to_datetime(df['timestamps'])
-# 数据使用小数点后2位
-df['open'] = df['open'].round(2)
-df['high'] = df['high'].round(2)
-df['low'] = df['low'].round(2)
-df['close'] = df['close'].round(2)
-df['volume'] = df['volume'].round(2)
-df['amount'] = df['amount'].round(2)
 
-# lookback = 400
-# pred_len = 120
+lookback = 400
+pred_len = 120
 
 # x_df = df.loc[:lookback-1, ['open', 'high', 'low', 'close', 'volume', 'amount']]
 # x_timestamp = df.loc[:lookback-1, 'timestamps']
 # y_timestamp = df.loc[lookback:lookback+pred_len-1, 'timestamps']
 
-lookback = 60
-pred_len = 60
+df_window = df.tail(lookback)
 
-x_df = df.loc[-lookback:, ['open', 'high', 'low', 'close', 'volume', 'amount']]  # 使用最新的历史数据
+df_window = df[-lookback-48: -48]
 
-
-
-x_timestamp = df.loc[-lookback:, 'timestamps']  # 使用最新的时间戳
-
-# 生成2025-09-03的交易时间戳（9:35-15:00，每5分钟一个数据点）
+xx_df = df_window[['open', 'high', 'low', 'close', 'volume', 'amount']]
+xx_timestamp = df_window['timestamps']
 start_time = pd.Timestamp('2025-09-03 09:35:00')
-y_timestamp = pd.date_range(
+yy_timestamp = pd.date_range(
     start=start_time,
     periods=pred_len,
     freq='5min'
 )
-y_timestamp = pd.Series(y_timestamp)  # 转换为Series类型
+yy_timestamp = pd.Series(yy_timestamp)  
 
 # 4. Make Prediction
 pred_df = predictor.predict(
-    df=x_df,
-    x_timestamp=x_timestamp,
-    y_timestamp=y_timestamp,
+    df=xx_df,
+    x_timestamp=xx_timestamp,
+    y_timestamp=yy_timestamp,
     pred_len=pred_len,
     T=1.0,
     top_p=0.9,
@@ -112,12 +86,15 @@ pred_df = predictor.predict(
 )
 
 # 5. Visualize Results
+pred_df['timestamps'] = pred_df.index
+pred_df.reset_index(drop=True, inplace=True)
 print("Forecasted Data Head:")
-print(pred_df.head())
+print(df_window)
+print(pred_df)
 
 # Combine historical and forecasted data for plotting
-kline_df = df.loc[:lookback+pred_len-1]
+kline_df = df[-lookback:]
+
 
 # visualize
 plot_prediction(kline_df, pred_df)
-
