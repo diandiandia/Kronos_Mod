@@ -11,9 +11,9 @@ from torch.utils.data import DataLoader, RandomSampler, SequentialSampler
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from finetune.config import Config
 from finetune.dataset import QlibDataset
-from model.kronos import KronosTokenizer, Kronos
+from models.kronos import KronosTokenizer, Kronos
 # Import shared utilities
-from finetune.utils.training_utils import (
+from utils.training_utils import (
     set_seed,
     get_model_size,
     format_time

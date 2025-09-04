@@ -15,8 +15,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from finetune.config import Config as TrainingConfig
 from finetune.dataset import QlibDataset
-from model.kronos import KronosTokenizer
-from finetune.utils.training_utils import set_seed, get_model_size, format_time
+from models.kronos import KronosTokenizer
+from utils.training_utils import set_seed, get_model_size, format_time
 
 # 设置日志
 import logging
