@@ -3,13 +3,12 @@ import pickle
 import numpy as np
 import pandas as pd
 import qlib
-from qlib.constant import REG_CN
+from qlib.config import REG_CN
 from qlib.data import D
 from qlib.data.dataset.loader import QlibDataLoader
 from tqdm import trange
 
 from config import Config
-from finetune.config import Config
 
 
 class QlibDataPreprocessor:
@@ -40,11 +39,20 @@ class QlibDataPreprocessor:
         # Determine the actual start and end times to load, including buffer for lookback and predict windows.
         start_index = cal.searchsorted(pd.Timestamp(self.config.dataset_begin_time))
         end_index = cal.searchsorted(pd.Timestamp(self.config.dataset_end_time))
-        real_start_time = cal[start_index - self.config.lookback_window]
 
-        if cal[end_index] != pd.Timestamp(self.config.dataset_end_time):
+        # Check if start_index lookbackw_window will cause negative index
+        adjusted_start_index = max(start_index - self.config.lookback_window, 0)
+        real_start_time = cal[adjusted_start_index]
+
+        # Check if end_index exceeds the range of the array
+        if end_index >= len(cal):
+            end_index = len(cal) - 1
+        elif cal[end_index] != pd.Timestamp(self.config.dataset_end_time):
             end_index -= 1
-        real_end_time = cal[end_index + self.config.predict_window]
+
+        # Check if end_index+predictw_window will exceed the range of the array
+        adjusted_end_index = min(end_index + self.config.predict_window, len(cal) - 1)
+        real_end_time = cal[adjusted_end_index]
 
         # Load data using Qlib's data loader.
         data_df = QlibDataLoader(config=data_fields_qlib).load(
@@ -119,3 +127,4 @@ if __name__ == '__main__':
     preprocessor.initialize_qlib()
     preprocessor.load_qlib_data()
     preprocessor.prepare_dataset()
+

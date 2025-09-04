@@ -2,6 +2,7 @@ import pandas as pd
 import datetime
 
 from data_fetch.baostock_fetcher import BaostockFetcher
+from data_fetch.tushare_fetcher import TushareFetcher
 
 def main():
     # 使用baostock_fetcher
@@ -16,12 +17,12 @@ def main():
     freq = '5'
     for ts_code in df['code']:
         df = fetcher.fetch_by_ts_code_and_freq(ts_code, start_date=start_date, end_date=end_date, freq=freq)
-        print(df)
-        # 处理数据
-        df['time_formatted'] = df['time'].astype(str).str[8:14].apply(lambda x: f"{x[:2]}:{x[2:4]}:{x[4:6]}")
-        # 2. 合并日期和时间
-        df['timestamps'] = df['date'] + ' ' + df['time_formatted']
-
+        # 处理数据time列20220729093500000为2022-07-29 09:35:00格式
+        # 将20220729转换成2022-07-29
+        df['date'] = df['time'].astype(str).str[:4] + '-' + df['time'].astype(str).str[4:6] + '-' + df['time'].astype(str).str[6:8]
+        # 将093500转换成09:35:00
+        df['time_new'] = df['time'].astype(str).str[8:10] + ':' + df['time'].astype(str).str[10:12] + ':' + df['time'].astype(str).str[12:]
+        df['timestamps'] = df['date'] + ' ' + df['time_new']
         # 3. 转换为datetime类型（可选，根据需求）
         df['timestamps'] = pd.to_datetime(df['timestamps'])
         df = df[['timestamps', 'open', 'high', 'low', 'close', 'volume', 'amount']]

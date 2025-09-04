@@ -115,4 +115,20 @@ def format_time(seconds: float) -> str:
     return str(datetime.timedelta(seconds=int(seconds)))
 
 
+def get_device_name() -> str:
+    """
+    Returns the name of the current device (e.g., "cuda:0", "mps", "cpu").
+
+    Returns:
+        str: The name of the current device.
+    """
+    if torch.cuda.is_available():
+        return f"cuda:{torch.cuda.current_device()}"
+    elif torch.mps.is_available():
+        return "mps"
+    elif torch.xpu.is_available():
+        return f"xpu:{torch.xpu.current_device()}"
+    else:
+        return "cpu"
+
 
