@@ -10,12 +10,12 @@ class Config:
         # Data & Feature Parameters
         # =================================================================
         # TODO: Update this path to your Qlib data directory.
-        self.qlib_data_path = "~/.qlib/qlib_data/cn_data"
+        self.qlib_data_path = "qlib_data/cn_data"
         self.instrument = 'csi300'
 
         # Overall time range for data loading from Qlib.
-        self.dataset_begin_time = "2011-01-01"
-        self.dataset_end_time = '2025-06-05'
+        self.dataset_begin_time = "2005-01-04"
+        self.dataset_end_time = '2025-09-04'
 
         # Sliding window parameters for creating samples.
         self.lookback_window = 90  # Number of past time steps for input.
@@ -32,18 +32,20 @@ class Config:
         # =================================================================
         # Note: The validation/test set starts earlier than the training/validation set ends
         # to account for the `lookback_window`.
-        self.train_time_range = ["2011-01-01", "2022-12-31"]
-        self.val_time_range = ["2022-09-01", "2024-06-30"]
-        self.test_time_range = ["2024-04-01", "2025-06-05"]
-        self.backtest_time_range = ["2024-07-01", "2025-06-05"]
+        self.train_time_range = ["2005-01-04", "2024-12-31"]  # 扩展训练集到2005年开始
+        self.val_time_range = ["2024-09-01", "2025-06-30"]    # 调整验证集
+        self.test_time_range = ["2025-04-01", "2025-09-04"]   # 更新测试集到最新数据
+        self.backtest_time_range = ["2025-07-01", "2025-09-04"] # 更新回测时间范围
 
         # TODO: Directory to save the processed, pickled datasets.
-        self.dataset_path = "./data/processed_datasets"
+        self.dataset_path = "data/processed_datasets"
 
         # =================================================================
         # Training Hyperparameters
         # =================================================================
         self.clip = 5.0  # Clipping value for normalized data to prevent outliers.
+
+        self.num_workers = 4
 
         self.epochs = 30
         self.log_interval = 100  # Log training status every N batches.
@@ -86,9 +88,9 @@ class Config:
         # Base directory for saving model checkpoints and results.
         # Using a general 'outputs' directory is a common practice.
         self.save_path = "./outputs/models"
-        self.tokenizer_save_folder_name = 'finetune_tokenizer_demo'
-        self.predictor_save_folder_name = 'finetune_predictor_demo'
-        self.backtest_save_folder_name = 'finetune_backtest_demo'
+        self.tokenizer_save_folder_name = 'finetune_tokenizer'
+        self.predictor_save_folder_name = 'finetune_predictor'
+        self.backtest_save_folder_name = 'finetune_backtest'
 
         # Path for backtesting results.
         self.backtest_result_path = "./outputs/backtest_results"
@@ -98,8 +100,8 @@ class Config:
         # =================================================================
         # TODO: Update these paths to your pretrained model locations.
         # These can be local paths or Hugging Face Hub model identifiers.
-        self.pretrained_tokenizer_path = "path/to/your/Kronos-Tokenizer-base"
-        self.pretrained_predictor_path = "path/to/your/Kronos-small"
+        self.pretrained_tokenizer_path = "pretrained/Kronos-Tokenizer-base"
+        self.pretrained_predictor_path = "pretrained/Kronos-small"
 
         # Paths to the fine-tuned models, derived from the save_path.
         # These will be generated automatically during training.

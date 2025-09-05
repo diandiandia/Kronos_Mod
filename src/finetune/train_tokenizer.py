@@ -14,11 +14,9 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 
 import comet_ml
 
-# Ensure project root is in path
-sys.path.append("../")
 from config import Config
 from dataset import QlibDataset
-from model.kronos import KronosTokenizer
+from models.kronos import KronosTokenizer
 # Import shared utilities
 from utils.training_utils import (
     setup_ddp,

@@ -12,3 +12,5 @@ tqdm==4.67.1
 safetensors
 baostock
 tushare
+comet_ml
+pyqlib

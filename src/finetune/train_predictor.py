@@ -15,7 +15,7 @@ import comet_ml
 sys.path.append('../')
 from config import Config
 from dataset import QlibDataset
-from model.kronos import KronosTokenizer, Kronos
+from models.kronos import KronosTokenizer, Kronos
 # Import shared utilities
 from utils.training_utils import (
     setup_ddp,

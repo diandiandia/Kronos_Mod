@@ -110,6 +110,95 @@ python .\src\prediction_backtest.py
    - 技术指标确认趋势
 ```
 
-
-
 ## 训练
+
+## 获取数据
+
+从如下地址下载免费数据：
+
+```shell
+wget https://github.com/chenditc/investment_data/releases/download/2023-10-08/qlib_bin.tar.gz
+tar -zxvf qlib_bin.tar.gz -C qlib_data/cn_data --strip-components=1
+```
+
+查看数据qlib_data/cn_data/calendars/day.txt中的数据起始信息：
+
+```shell
+2005-01-04
+2005-01-05
+……
+2025-09-03
+2025-09-04
+```
+
+修改config.py中的信息：
+
+```python
+        # TODO: Update this path to your Qlib data directory.
+        self.qlib_data_path = "qlib_data/cn_data"  # 你下载的数据保存的地址
+        self.instrument = 'csi300' # 查看cn_data/instruments/*文件，查看有哪些，csi300，csi500或者其他，按照这个信息改。
+        
+        
+        # Overall time range for data loading from Qlib.
+        self.dataset_begin_time = "2005-01-04"   # 数据起始地址
+        self.dataset_end_time = '2025-09-04'     # 数据结束地址
+        
+        
+        self.train_time_range = ["2005-01-04", "2024-12-31"]  # 扩展训练集到2005年开始
+        self.val_time_range = ["2024-09-01", "2025-06-30"]    # 调整验证集
+        self.test_time_range = ["2025-04-01", "2025-09-04"]   # 更新测试集到最新数据
+        self.backtest_time_range = ["2025-07-01", "2025-09-04"] # 更新回测时间范围
+        
+        # 预训练的模型地址
+        self.pretrained_tokenizer_path = "pretrained/Kronos-Tokenizer-base"
+        self.pretrained_predictor_path = "pretrained/Kronos-small"
+```
+
+### 处理数据
+
+```python
+python .\src\finetune\qlib_data_preprocess.py
+```
+
+处理完后会生成pkl文件。
+
+### 训练
+
+token单卡训练：
+
+```python
+python src/train_tokenizer_single.py
+```
+
+训练信息：
+
+```shell
+使用设备: cpu
+Loading weights from local directory
+模型参数量: 4.0M
+开始训练...
+批次大小: 50
+有效总批次大小: 50
+创建数据加载器...
+[TRAIN] Pre-computing sample indices...
+[TRAIN] Found 1303568 possible samples. Using 100000 per epoch.
+[VAL] Pre-computing sample indices...
+[VAL] Found 27629 possible samples. Using 20000 per epoch.
+训练数据集大小: 100000, 验证数据集大小: 20000
+数据加载器创建完成。训练步数/epoch: 2000, 验证步数: 400
+[Epoch 1/30, Step 100/2000] LR 0.000021, Loss: -0.0223
+```
+
+模型训练：
+
+```python
+python src/train_predictor_single.py
+```
+
+训练信息：
+
+```shell
+ epoch.
+[VAL] Pre-computing sample indices...
+[VAL] Found 27629 possible samples. Using 20000 
+```
