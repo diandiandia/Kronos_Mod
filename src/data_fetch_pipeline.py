@@ -21,10 +21,12 @@ def main():
         # 将20220729转换成2022-07-29
         df['date'] = df['time'].astype(str).str[:4] + '-' + df['time'].astype(str).str[4:6] + '-' + df['time'].astype(str).str[6:8]
         # 将093500转换成09:35:00
-        df['time_new'] = df['time'].astype(str).str[8:10] + ':' + df['time'].astype(str).str[10:12] + ':' + df['time'].astype(str).str[12:]
+        # Correct time slicing to get HH:MM:SS format by limiting seconds to 2 digits
+        df['time_new'] = df['time'].astype(str).str[8:10] + ':' + df['time'].astype(str).str[10:12] + ':' + df['time'].astype(str).str[12:14]
         df['timestamps'] = df['date'] + ' ' + df['time_new']
         # 3. 转换为datetime类型（可选，根据需求）
-        df['timestamps'] = pd.to_datetime(df['timestamps'])
+        # Specify timestamp format to avoid parsing warnings
+        df['timestamps'] = pd.to_datetime(df['timestamps'], format='%Y-%m-%d %H:%M:%S')
         df = df[['timestamps', 'open', 'high', 'low', 'close', 'volume', 'amount']]
         # 保存到csv
         df.to_csv(f"./stock_data/{ts_code}_{freq}.csv", index=False)

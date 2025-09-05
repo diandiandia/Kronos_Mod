@@ -49,7 +49,10 @@ def plot_prediction(kline_df, pred_df, stock_name):
 def create_pred_date(pred_date, pred_len):
     df_time = pd.read_csv("default_data/default_time.csv")
     # 读出来的df_time是一列时间，例如：09:35:00，需要增加今天日期，变成2025-09-04 09:35:00
-    today = datetime.date.today()
+    # pred_date = '2025-09-05 09:35:00' 获取pred_date的日期
+    pred_date = datetime.datetime.strptime(pred_date, '%Y-%m-%d %H:%M:%S')
+    
+    today = pred_date.date()
     tomorrow = today + datetime.timedelta(days=1)
     the_day_after_tomorrow = tomorrow + datetime.timedelta(days=1)
 
@@ -219,7 +222,8 @@ if __name__ == "__main__":
     load_online_model = False
     lookback = 1000
     pred_len = 120
-    pred_date = datetime.datetime.today().strftime('%Y-%m-%d') + ' 09:35:00'
+    # pred_date = datetime.datetime.today().strftime('%Y-%m-%d') + ' 09:35:00'
+    pred_date = '2025-09-05 09:35:00'
     
     # 执行批量预测
     results = batch_predict_stocks(
