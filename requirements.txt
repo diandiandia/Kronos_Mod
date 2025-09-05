@@ -1,4 +1,4 @@
-# -i https://pypi.tuna.tsinghua.edu.cn/simple
+# -i https://mirrors.aliyun.com/pypi/simple/
 numpy
 pandas
 torch
