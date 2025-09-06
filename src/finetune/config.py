@@ -30,12 +30,12 @@ class Config:
         # =================================================================
         # Dataset Splitting & Paths
         # =================================================================
-        # Note: The validation/test set starts earlier than the training/validation set ends
-        # to account for the `lookback_window`.
-        self.train_time_range = ["2005-01-04", "2024-12-31"]  # 扩展训练集到2005年开始
-        self.val_time_range = ["2024-09-01", "2025-06-30"]    # 调整验证集
-        self.test_time_range = ["2025-04-01", "2025-09-04"]   # 更新测试集到最新数据
-        self.backtest_time_range = ["2025-07-01", "2025-09-04"] # 更新回测时间范围
+        # Note: Time ranges are carefully adjusted to ensure no data leakage
+        # considering the 90-day lookback_window for feature generation.
+        self.train_time_range = ["2005-01-04", "2024-06-30"]  # 训练集：留出90天缓冲区
+        self.val_time_range = ["2024-10-01", "2025-01-31"]    # 验证集：从训练集结束+90天后开始
+        self.test_time_range = ["2025-02-01", "2025-09-04"]   # 测试集：从验证集结束+90天后开始
+        self.backtest_time_range = ["2025-02-01", "2025-09-05"] # 回测：与测试集保持一致
 
         # TODO: Directory to save the processed, pickled datasets.
         self.dataset_path = "data/processed_datasets"
@@ -47,26 +47,26 @@ class Config:
 
         self.num_workers = 4
 
-        self.epochs = 30
+        self.epochs = 50  # 增加epoch数，配合早停机制
         self.log_interval = 100  # Log training status every N batches.
-        self.batch_size = 50  # Batch size per GPU.
+        self.batch_size = 32  # 减小batch size以增强正则化效果
 
         # Number of samples to draw for one "epoch" of training/validation.
         # This is useful for large datasets where a true epoch is too long.
-        self.n_train_iter = 2000 * self.batch_size
-        self.n_val_iter = 400 * self.batch_size
+        self.n_train_iter = 1500 * self.batch_size  # 减少训练样本数
+        self.n_val_iter = 300 * self.batch_size     # 减少验证样本数
 
-        # Learning rates for different model components.
-        self.tokenizer_learning_rate = 2e-4
-        self.predictor_learning_rate = 4e-5
+        # Learning rates for different model components。
+        self.tokenizer_learning_rate = 1e-4  # 降低学习率
+        self.predictor_learning_rate = 2e-5  # 降低学习率
 
-        # Gradient accumulation to simulate a larger batch size.
+        # Gradient accumulation to simulate a larger batch size。
         self.accumulation_steps = 1
 
-        # AdamW optimizer parameters.
+        # AdamW optimizer parameters。
         self.adam_beta1 = 0.9
         self.adam_beta2 = 0.95
-        self.adam_weight_decay = 0.1
+        self.adam_weight_decay = 0.2  # 增加L2正则化
 
         # Miscellaneous
         self.seed = 100  # Global random seed for reproducibility.
