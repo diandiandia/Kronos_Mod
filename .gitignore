@@ -7,3 +7,4 @@ prediction_results/*
 qlib_data/*
 .DS_Store
 outputs/*
+pretrained_old/*

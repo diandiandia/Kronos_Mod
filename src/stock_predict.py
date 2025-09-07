@@ -57,7 +57,7 @@ def predict_stock(load_online_model, lookback, pred_len, pred_date):
     predictor = KronosPredictor(model, tokenizer, device=device, max_context=512)
 
     # 2. Load Data
-    df = pd.read_csv("stock_data\sh.600426_5.csv")
+    df = pd.read_csv("stock_data/sh.600000_5.csv")
     df['timestamps'] = pd.to_datetime(df['timestamps'])
 
     y_timestamp = create_pred_date(pred_date, pred_len)
@@ -97,9 +97,9 @@ def predict_stock(load_online_model, lookback, pred_len, pred_date):
     plot_prediction(kline_df=df, pred_df=pred_df)
 
 def create_pred_date(pred_date, pred_len):
-    df_time = pd.read_csv("default_data\default_time.csv")
+    df_time = pd.read_csv("default_data/default_time.csv")
     # 读出来的df_time是一列时间，例如：09:35:00，需要增加今天日期，变成2025-09-04 09:35:00
-    today = datetime.date.today()
+    today = datetime.datetime.strptime(pred_date, '%Y-%m-%d %H:%M:%S').date()
     tomorrow = today + datetime.timedelta(days=1)
     the_day_after_tomorrow = tomorrow + datetime.timedelta(days=1)
 

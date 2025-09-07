@@ -304,7 +304,8 @@ def train_model(model, device, config, save_dir):
         # 优化的早停策略
         if avg_val_loss < best_val_loss - 1e-4:
             best_val_loss = avg_val_loss
-            save_path = f"{save_dir}/checkpoints/best_model_epoch_{epoch_idx + 1}"
+            # save_path = f"{save_dir}/checkpoints/best_model_epoch_{epoch_idx + 1}"
+            save_path = config.finetuned_tokenizer_path
             model.save_pretrained(save_path)
             print(f"最佳模型保存到 {save_path} (验证损失: {best_val_loss:.4f})")
             patience_counter = 0
