@@ -17,6 +17,7 @@ from utils.training_utils import set_seed, get_model_size, format_time
 
 # 设置日志
 import logging
+from utils.training_utils import get_device_name
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
@@ -181,12 +182,7 @@ def main():
     set_seed(config.seed)
 
     # 选择设备
-    if torch.cuda.is_available():
-        device = torch.device('cuda')
-    elif torch.mps.is_available():
-        device = torch.device('mps')
-    else:
-        device = torch.device('cpu')
+    device = get_device_name()
     print(f"使用设备: {device}")
 
     # 创建保存目录

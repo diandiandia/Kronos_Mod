@@ -15,7 +15,7 @@ class Config:
 
         # Overall time range for data loading from Qlib.
         self.dataset_begin_time = "2005-01-04"
-        self.dataset_end_time = '2025-09-04'
+        self.dataset_end_time = '2025-09-05'
 
         # Sliding window parameters for creating samples.
         self.lookback_window = 90  # Number of past time steps for input.
@@ -32,88 +32,85 @@ class Config:
         # =================================================================
         # Note: Time ranges are carefully adjusted to ensure no data leakage
         # considering the 90-day lookback_window for feature generation.
-        self.train_time_range = ["2005-01-04", "2024-06-30"]  # 训练集：留出90天缓冲区
-        self.val_time_range = ["2024-10-01", "2025-01-31"]    # 验证集：从训练集结束+90天后开始
-        self.test_time_range = ["2025-02-01", "2025-09-04"]   # 测试集：从验证集结束+90天后开始
-        self.backtest_time_range = ["2025-02-01", "2025-09-05"] # 回测：与测试集保持一致
+        self.train_time_range = ["2005-01-04", "2024-05-31"]  # 训练集：留出足够缓冲区
+        self.val_time_range = ["2024-06-01", "2024-12-31"]    # 验证集：确保有足够数据
+        self.test_time_range = ["2025-01-01", "2025-09-05"]   # 测试集：最新数据
+        self.backtest_time_range = ["2025-01-01", "2025-09-05"] # 回测：与测试集保持一致
 
         # TODO: Directory to save the processed, pickled datasets.
         self.dataset_path = "data/processed_datasets"
 
         # =================================================================
-        # Training Hyperparameters
+        # Training Hyperparameters - 当前训练状态调整
         # =================================================================
         self.clip = 5.0  # Clipping value for normalized data to prevent outliers.
 
         self.num_workers = 4
 
-        self.epochs = 50  # 增加epoch数，配合早停机制
-        self.log_interval = 100  # Log training status every N batches.
-        self.batch_size = 32  # 减小batch size以增强正则化效果
+        self.epochs = 30  # 保持最大epoch数
+        self.log_interval = 50  # 日志记录频率
+        self.batch_size = 16  # 小批次增强正则化
+        
+        # 基于当前训练状态调整早停参数
+        self.early_stopping_patience = 7  # 增加耐心值，给模型更多机会
+        self.min_delta = 5e-4  # 略微提高改善阈值
 
         # Number of samples to draw for one "epoch" of training/validation.
-        # This is useful for large datasets where a true epoch is too long.
-        self.n_train_iter = 1500 * self.batch_size  # 减少训练样本数
-        self.n_val_iter = 300 * self.batch_size     # 减少验证样本数
+        self.n_train_iter = 1000 * self.batch_size
+        self.n_val_iter = 200 * self.batch_size
 
-        # Learning rates for different model components。
-        self.tokenizer_learning_rate = 1e-4  # 降低学习率
-        self.predictor_learning_rate = 2e-5  # 降低学习率
+        # Learning rates - 当前已处于较低水平
+        self.tokenizer_learning_rate = 5e-5
+        self.predictor_learning_rate = 1e-5
 
-        # Gradient accumulation to simulate a larger batch size。
+        # Gradient accumulation
         self.accumulation_steps = 1
 
-        # AdamW optimizer parameters。
+        # AdamW optimizer参数
         self.adam_beta1 = 0.9
         self.adam_beta2 = 0.95
-        self.adam_weight_decay = 0.2  # 增加L2正则化
+        self.adam_weight_decay = 0.3  # 保持强正则化
 
-        # Miscellaneous
-        self.seed = 100  # Global random seed for reproducibility.
+        # 正则化参数
+        self.dropout_rate = 0.2
+        self.label_smoothing = 0.1
+
+        # 随机种子
+        self.seed = 42
 
         # =================================================================
         # Experiment Logging & Saving
         # =================================================================
-        self.use_comet = True # Set to False if you don't want to use Comet ML
+        self.use_comet = True
         self.comet_config = {
-            # It is highly recommended to load secrets from environment variables
-            # for security purposes. Example: os.getenv("COMET_API_KEY")
             "api_key": "YOUR_COMET_API_KEY",
             "project_name": "Kronos-Finetune-Demo",
-            "workspace": "your_comet_workspace" # TODO: Change to your Comet ML workspace name
+            "workspace": "your_comet_workspace"
         }
-        self.comet_tag = 'finetune_demo'
-        self.comet_name = 'finetune_demo'
+        self.comet_tag = 'finetune_demo_optimized_v2'
+        self.comet_name = 'kronos_training_final'
 
-        # Base directory for saving model checkpoints and results.
-        # Using a general 'outputs' directory is a common practice.
-        self.save_path = "./outputs/models"
+        # 保存路径
+        self.save_path = "./outputs/models_optimized"
         self.tokenizer_save_folder_name = 'finetune_tokenizer'
         self.predictor_save_folder_name = 'finetune_predictor'
         self.backtest_save_folder_name = 'finetune_backtest'
-
-        # Path for backtesting results.
-        self.backtest_result_path = "./outputs/backtest_results"
+        self.backtest_result_path = "./outputs/backtest_results_optimized"
 
         # =================================================================
         # Model & Checkpoint Paths
         # =================================================================
-        # TODO: Update these paths to your pretrained model locations.
-        # These can be local paths or Hugging Face Hub model identifiers.
         self.pretrained_tokenizer_path = "pretrained/Kronos-Tokenizer-base"
-        self.pretrained_predictor_path = "pretrained/Kronos-small"
-
-        # Paths to the fine-tuned models, derived from the save_path.
-        # These will be generated automatically during training.
+        self.pretrained_predictor_path = "pretrained/Kronos-base"
         self.finetuned_tokenizer_path = f"{self.save_path}/{self.tokenizer_save_folder_name}/checkpoints/best_model"
         self.finetuned_predictor_path = f"{self.save_path}/{self.predictor_save_folder_name}/checkpoints/best_model"
 
         # =================================================================
         # Backtesting Parameters
         # =================================================================
-        self.backtest_n_symbol_hold = 50  # Number of symbols to hold in the portfolio.
-        self.backtest_n_symbol_drop = 5  # Number of symbols to drop from the pool.
-        self.backtest_hold_thresh = 5  # Minimum holding period for a stock.
+        self.backtest_n_symbol_hold = 50
+        self.backtest_n_symbol_drop = 5
+        self.backtest_hold_thresh = 5
         self.inference_T = 0.6
         self.inference_top_p = 0.9
         self.inference_top_k = 0
