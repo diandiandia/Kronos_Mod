@@ -41,7 +41,7 @@ class Config:
         self.dataset_path = "data/processed_datasets"
 
         # =================================================================
-        # Training Hyperparameters - 当前训练状态调整
+        # Training Hyperparameters - 优化版本
         # =================================================================
         self.clip = 5.0  # Clipping value for normalized data to prevent outliers.
 
@@ -51,29 +51,46 @@ class Config:
         self.log_interval = 50  # 日志记录频率
         self.batch_size = 16  # 小批次增强正则化
         
-        # 基于当前训练状态调整早停参数
-        self.early_stopping_patience = 7  # 增加耐心值，给模型更多机会
-        self.min_delta = 5e-4  # 略微提高改善阈值
+        # 优化的早停参数 - 基于当前训练状态调整
+        self.early_stopping_patience = 12  # 增加耐心值，给模型更多收敛机会
+        self.min_delta = 5e-4  # 更严格的改善阈值
 
         # Number of samples to draw for one "epoch" of training/validation.
         self.n_train_iter = 1000 * self.batch_size
         self.n_val_iter = 200 * self.batch_size
 
-        # Learning rates - 当前已处于较低水平
-        self.tokenizer_learning_rate = 5e-5
-        self.predictor_learning_rate = 1e-5
+        # 优化的学习率 - 基于当前训练状态调整
+        self.tokenizer_learning_rate = 2.5e-5  # 进一步降低tokenizer学习率
+        self.predictor_learning_rate = 6e-6  # 降低predictor学习率，提高稳定性
 
-        # Gradient accumulation
-        self.accumulation_steps = 1
+        # Gradient accumulation - 优化梯度累积
+        self.accumulation_steps = 2  # 增加梯度累积步数，提高稳定性
+        self.gradient_monitoring = True  # 启用梯度监控
+        self.gradient_clip_value = 0.8  # 更严格的梯度裁剪
 
-        # AdamW optimizer参数
+        # AdamW optimizer参数 - 优化版本
         self.adam_beta1 = 0.9
-        self.adam_beta2 = 0.95
-        self.adam_weight_decay = 0.3  # 保持强正则化
+        self.adam_beta2 = 0.98  # 提高二阶矩估计的稳定性
+        self.adam_weight_decay = 0.015  # 增强权重衰减
 
-        # 正则化参数
-        self.dropout_rate = 0.2
-        self.label_smoothing = 0.1
+        # 增强的正则化参数 - 防止过拟合
+        self.dropout_rate = 0.35  # 适度增加dropout率
+        self.label_smoothing = 0.12  # 优化标签平滑
+        self.use_batch_norm = True  # 启用BatchNorm
+        self.use_layer_norm = True  # 启用LayerNorm
+        
+        # 新增优化参数
+        self.consistency_loss_weight = 0.1  # 一致性损失权重
+        self.entropy_regularization_weight = 0.01  # 熵正则化权重
+        self.top_k_sampling = 50  # top-k采样参数
+        self.attention_scaling = True  # 启用注意力缩放
+        self.residual_connections = True  # 启用残差连接
+        
+        # 动态权重调整参数
+        self.s1_weight_start = 0.8  # S1损失初始权重
+        self.s1_weight_end = 0.6    # S1损失最终权重
+        self.s2_weight_start = 0.2  # S2损失初始权重
+        self.s2_weight_end = 0.4    # S2损失最终权重
 
         # 随机种子
         self.seed = 42
