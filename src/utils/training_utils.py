@@ -2,6 +2,7 @@ import os
 import random
 import datetime
 import numpy as np
+import pandas as pd
 import torch
 import torch.distributed as dist
 
@@ -131,4 +132,60 @@ def get_device_name() -> str:
     else:
         return "cpu"
 
+
+def create_trading_timestamps(start_date, end_date=None, start_time='09:35:00', end_time='15:00:00', 
+                              lunch_start='11:30:00', lunch_end='13:00:00', freq='5min'):
+    """
+    创建交易时间戳序列，从start_time到end_time，排除午休时间
+    
+    Args:
+        start_date: 开始日期，格式 'YYYY-MM-DD' 或 'YYYY-MM-DD HH:MM:SS'
+        end_date: 结束日期，格式 'YYYY-MM-DD'，如果为None则只生成start_date一天
+        start_time: 每日开始交易时间，默认 '09:35:00'
+        end_time: 每日结束交易时间，默认 '15:00:00'
+        lunch_start: 午休开始时间，默认 '11:30:00'
+        lunch_end: 午休结束时间，默认 '13:00:00'
+        freq: 时间频率，默认 '5min'
+    
+    Returns:
+        DataFrame: 包含timestamps列的DataFrame
+    """
+    # 处理日期输入
+    if ' ' in start_date:
+        start_datetime = pd.to_datetime(start_date)
+    else:
+        start_datetime = pd.to_datetime(start_date + ' ' + start_time)
+    
+    if end_date is None:
+        end_datetime = start_datetime
+    else:
+        end_datetime = pd.to_datetime(end_date + ' ' + end_time)
+    
+    # 生成完整的时间序列
+    all_timestamps = pd.date_range(
+        start=start_datetime,
+        end=end_datetime,
+        freq=freq
+    )
+    
+    # 创建DataFrame
+    df = pd.DataFrame({'timestamps': all_timestamps})
+    
+    # 提取时间部分
+    time_part = df['timestamps'].dt.time
+    
+    # 转换为time对象进行比较
+    start_time_obj = datetime.datetime.strptime(start_time, '%H:%M:%S').time()
+    end_time_obj = datetime.datetime.strptime(end_time, '%H:%M:%S').time()
+    lunch_start_obj = datetime.datetime.strptime(lunch_start, '%H:%M:%S').time()
+    lunch_end_obj = datetime.datetime.strptime(lunch_end, '%H:%M:%S').time()
+    
+    # 过滤条件：在交易时间内且不在午休时间内
+    in_trading_hours = (time_part >= start_time_obj) & (time_part <= end_time_obj)
+    not_in_lunch = (time_part < lunch_start_obj) | (time_part > lunch_end_obj)
+    
+    # 应用过滤条件
+    filtered_df = df[in_trading_hours & not_in_lunch]
+    
+    return filtered_df
 

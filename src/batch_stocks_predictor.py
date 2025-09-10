@@ -8,7 +8,7 @@ from pathlib import Path
 
 import torch
 from models.kronos import Kronos, KronosTokenizer, KronosPredictor
-from utils.training_utils import get_device_name
+from utils.training_utils import create_trading_timestamps, get_device_name
 
 
 def plot_prediction(kline_df, pred_df, stock_name):
@@ -47,30 +47,12 @@ def plot_prediction(kline_df, pred_df, stock_name):
 
 
 def create_pred_date(pred_date, pred_len):
-    df_time = pd.read_csv("default_data/default_time.csv")
-    # 读出来的df_time是一列时间，例如：09:35:00，需要增加今天日期，变成2025-09-04 09:35:00
-    # pred_date = '2025-09-05 09:35:00' 获取pred_date的日期
+    
     pred_date = datetime.datetime.strptime(pred_date, '%Y-%m-%d %H:%M:%S')
+    start_date = pred_date.strftime('%Y-%m-%d %H:%M:%S')
+    end_date = (pred_date + datetime.timedelta(days=4)).date().strftime('%Y-%m-%d')
+    y_timestamp = create_trading_timestamps(start_date=start_date, end_date=end_date)
     
-    today = pred_date.date()
-    tomorrow = today + datetime.timedelta(days=1)
-    the_day_after_tomorrow = tomorrow + datetime.timedelta(days=1)
-
-    # Fix: Extract the timestamps column and concatenate properly
-    time_values = df_time['timestamps'].values
-    
-    # Create date strings for each day
-    today_times = [today.strftime('%Y-%m-%d ') + time_str for time_str in time_values[0:48]]
-    tomorrow_times = [tomorrow.strftime('%Y-%m-%d ') + time_str for time_str in time_values[48:96]]
-    the_day_after_tomorrow_times = [the_day_after_tomorrow.strftime('%Y-%m-%d ') + time_str for time_str in time_values[96:144]]
-    
-    # Combine all times
-    all_times = today_times + tomorrow_times + the_day_after_tomorrow_times
-    
-    # Create DataFrame with proper structure
-    df_time = pd.DataFrame({'timestamps': all_times})
-    df_time['timestamps'] = pd.to_datetime(df_time['timestamps'])
-    y_timestamp = df_time[df_time['timestamps'] >= pred_date]
     y_timestamp = y_timestamp['timestamps'][:pred_len]
     return y_timestamp
 
@@ -128,7 +110,8 @@ def predict_single_stock(predictor, stock_file, lookback, pred_len, pred_date, s
         # 5. 处理预测结果
         pred_df['timestamps'] = pred_df.index
         pred_df.reset_index(drop=True, inplace=True)
-        
+        pred_df = pred_df[['timestamps', 'open', 'high', 'low', 'close', 'volume', 'amount']]
+
         print(f"{stock_name} 预测完成")
         print(f"预测数据前5行:")
         print(pred_df.head())
@@ -222,8 +205,8 @@ if __name__ == "__main__":
     load_online_model = False
     lookback = 1000
     pred_len = 120
-    # pred_date = datetime.datetime.today().strftime('%Y-%m-%d') + ' 09:35:00'
-    pred_date = '2025-09-09 09:35:00'
+    pred_date = datetime.datetime.today().strftime('%Y-%m-%d') + ' 14:00:00'
+    # pred_date = '2025-09-10 09:35:00'
     
     # 执行批量预测
     results = batch_predict_stocks(

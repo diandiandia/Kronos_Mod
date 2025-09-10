@@ -19,7 +19,7 @@ class TushareFetcher(StockFetcher):
         try:
             
             end_date = datetime.now().strftime("%Y%m%d")
-            start_date = (datetime.now() - timedelta(days=5)).strftime("%Y%m%d")
+            start_date = (datetime.now() - timedelta(days=30)).strftime("%Y%m%d")
             df = self.pro.index_weight(
                 index_code='000300.SH',
                 start_date=start_date,
@@ -28,6 +28,7 @@ class TushareFetcher(StockFetcher):
             self.logger.info("Successfully retrieved HS300 stocks from tushare.")
             # 修改con_code为code
             df.rename(columns={'con_code': 'code'}, inplace=True)
+            df = df.drop_duplicates(subset=['code'])
             return df[["code", "trade_date", "weight"]]
         except Exception as e:
             self.logger.error(f"Error retrieving HS300 stocks: {e}")

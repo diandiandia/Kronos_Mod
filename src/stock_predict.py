@@ -5,7 +5,7 @@ import sys
 
 import torch
 from models.kronos import Kronos, KronosTokenizer, KronosPredictor
-from utils.training_utils import get_device_name
+from utils.training_utils import create_trading_timestamps, get_device_name
 
 
 def plot_prediction(kline_df, pred_df):
@@ -57,7 +57,7 @@ def predict_stock(load_online_model, lookback, pred_len, pred_date):
     predictor = KronosPredictor(model, tokenizer, device=device, max_context=512)
 
     # 2. Load Data
-    df = pd.read_csv("stock_data/sh.600000_5.csv")
+    df = pd.read_csv("stock_data/000568_5.csv")
     df['timestamps'] = pd.to_datetime(df['timestamps'])
 
     y_timestamp = create_pred_date(pred_date, pred_len)
@@ -92,32 +92,18 @@ def predict_stock(load_online_model, lookback, pred_len, pred_date):
     # 5. Visualize Results
     pred_df['timestamps'] = pred_df.index
     pred_df.reset_index(drop=True, inplace=True)
+    pred_df = pred_df[['timestamps', 'open', 'high', 'low', 'close', 'volume', 'amount']]
     print("Forecasted Data Head:")
     print(pred_df)
     plot_prediction(kline_df=df, pred_df=pred_df)
 
 def create_pred_date(pred_date, pred_len):
-    df_time = pd.read_csv("default_data/default_time.csv")
-    # 读出来的df_time是一列时间，例如：09:35:00，需要增加今天日期，变成2025-09-04 09:35:00
-    today = datetime.datetime.strptime(pred_date, '%Y-%m-%d %H:%M:%S').date()
-    tomorrow = today + datetime.timedelta(days=1)
-    the_day_after_tomorrow = tomorrow + datetime.timedelta(days=1)
-
-    # Fix: Extract the timestamps column and concatenate properly
-    time_values = df_time['timestamps'].values
     
-    # Create date strings for each day
-    today_times = [today.strftime('%Y-%m-%d ') + time_str for time_str in time_values[0:48]]
-    tomorrow_times = [tomorrow.strftime('%Y-%m-%d ') + time_str for time_str in time_values[48:96]]
-    the_day_after_tomorrow_times = [the_day_after_tomorrow.strftime('%Y-%m-%d ') + time_str for time_str in time_values[96:144]]
+    pred_date = datetime.datetime.strptime(pred_date, '%Y-%m-%d %H:%M:%S')
+    start_date = pred_date.strftime('%Y-%m-%d %H:%M:%S')
+    end_date = (pred_date + datetime.timedelta(days=4)).date().strftime('%Y-%m-%d')
+    y_timestamp = create_trading_timestamps(start_date=start_date, end_date=end_date)
     
-    # Combine all times
-    all_times = today_times + tomorrow_times + the_day_after_tomorrow_times
-    
-    # Create DataFrame with proper structure
-    df_time = pd.DataFrame({'timestamps': all_times})
-    df_time['timestamps'] = pd.to_datetime(df_time['timestamps'])
-    y_timestamp = df_time[df_time['timestamps'] >= pred_date]
     y_timestamp = y_timestamp['timestamps'][:pred_len]
     return y_timestamp
 
@@ -126,5 +112,5 @@ if __name__ == "__main__":
     load_online_model = False
     lookback = 1000
     pred_len = 120
-    pred_date = '2025-09-04 09:35:00'
+    pred_date = '2025-09-10 09:40:00'
     predict_stock(load_online_model, lookback, pred_len, pred_date)
