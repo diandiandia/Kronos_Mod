@@ -223,7 +223,7 @@ if __name__ == "__main__":
     lookback = 1000
     pred_len = 120
     # pred_date = datetime.datetime.today().strftime('%Y-%m-%d') + ' 09:35:00'
-    pred_date = '2025-09-05 09:35:00'
+    pred_date = '2025-09-09 09:35:00'
     
     # 执行批量预测
     results = batch_predict_stocks(

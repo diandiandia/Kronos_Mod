@@ -12,7 +12,7 @@ def main():
     df = fetcher.fetch_stock_ts_code_list()
     print(df)
     # 下载hs300股票数据
-    start_date = '2020-01-01'
+    start_date = '2024-01-01'
     end_date = datetime.datetime.now().strftime('%Y-%m-%d')
     freq = '5'
     for ts_code in df['code']:
