@@ -1,6 +1,8 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import sys
+
+from utils.training_utils import get_device_name
 sys.path.append("../")
 from models.kronos import Kronos, KronosTokenizer, KronosPredictor
 
@@ -42,11 +44,13 @@ def plot_prediction(kline_df, pred_df):
 tokenizer = KronosTokenizer.from_pretrained("NeoQuasar/Kronos-Tokenizer-base")
 model = Kronos.from_pretrained("NeoQuasar/Kronos-small")
 
+device_name = get_device_name()
+
 # 2. Instantiate Predictor
-predictor = KronosPredictor(model, tokenizer, device="cuda:0", max_context=512)
+predictor = KronosPredictor(model, tokenizer, device=device_name, max_context=128)
 
 # 3. Prepare Data
-df = pd.read_csv("./data/XSHG_5min_600977.csv")
+df = pd.read_csv("stock_data/sz.300413_5.csv")
 df['timestamps'] = pd.to_datetime(df['timestamps'])
 
 lookback = 400
@@ -70,7 +74,7 @@ pred_df = predictor.predict(
 
 # 5. Visualize Results
 print("Forecasted Data Head:")
-print(pred_df.head())
+print(pred_df.head(50))
 
 # Combine historical and forecasted data for plotting
 kline_df = df.loc[:lookback+pred_len-1]
