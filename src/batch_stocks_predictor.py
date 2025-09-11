@@ -162,7 +162,7 @@ def batch_predict_stocks(stock_data_dir="stock_data", load_online_model=False, l
         model = Kronos.from_pretrained("pretrained/Kronos-base")
 
     device = get_device_name()
-    predictor = KronosPredictor(model, tokenizer, device=device, max_context=512)
+    predictor = KronosPredictor(model, tokenizer, device=device, max_context=128)
     
     # 2. 获取所有股票数据文件
     stock_files = glob.glob(os.path.join(stock_data_dir, "*.csv"))
@@ -205,7 +205,7 @@ if __name__ == "__main__":
     load_online_model = False
     lookback = 1000
     pred_len = 120
-    pred_date = datetime.datetime.today().strftime('%Y-%m-%d') + ' 14:00:00'
+    pred_date = datetime.datetime.today().strftime('%Y-%m-%d') + ' 09:35:00'
     # pred_date = '2025-09-10 09:35:00'
     
     # 执行批量预测
